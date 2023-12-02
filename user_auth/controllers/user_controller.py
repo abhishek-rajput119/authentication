@@ -25,17 +25,39 @@ class UserController:
         user_details = self.get_user_details(user_data)
         return user_details, None
 
-    def login_user(self, payload):
-        if not payload or not payload.get("username"):
+    def login_user(self, username, password):
+        if not username:
             return None, {"message": "username is required"}
-        if not payload.get("password"):
+        if not password:
             return None, {"message": "password is required"}
 
-        token = Auth.generate_jwt_token(payload)
-        if token:
-            return {"token": token}
+        try:
+            user = UserDetails.objects.filter(username=username).first()
+            if not user:
+                return None, Constants.UserConstants.DOES_NOT_EXISTS
+            password_salt = bytes(user.salt, 'utf-8')
 
-        return {"message": "cannot get the token"}
+            hashed_password = PasswordHasher().hash_password(password, password_salt)
+            hashed_password = hashed_password.decode('utf-8')
+            user = UserDetails.objects.filter(username=username, password=hashed_password).first()
+            if not user:
+                return None, Constants.UserConstants.INCORRECT_CREDENTIALS
+
+            user_details = {
+                "name": user.name,
+                "username": user.username,
+                "bio": user.bio,
+                "age": user.age,
+            }
+
+            jwt_token = Auth().generate_jwt_token(
+                {"name": user_details.get("name"), "username": user_details.get("username")})
+            if jwt_token:
+                return user_details, jwt_token
+
+            return None, "cannot get the token"
+        except Exception as e:
+            return None, f"{e}"
 
     def get_user_details(self, user_data):
         user_details = dict()
