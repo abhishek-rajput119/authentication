@@ -1,12 +1,16 @@
 import jwt
 from django.conf import settings
-
+from datetime import datetime,timedelta
 
 class Auth:
     def generate_jwt_token(self, payload):
         if not payload:
             return None
         try:
+            expiration_time = datetime.utcnow() + timedelta(hours=1)
+
+            payload['exp'] = expiration_time
+            payload['iat'] = datetime.utcnow()
             encoded_jwt = jwt.encode(payload, settings.SECRET_KEY, algorithm="HS256")
         except:
             return None
