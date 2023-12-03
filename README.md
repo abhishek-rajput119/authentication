@@ -104,12 +104,20 @@ curl --location --request POST 'http://127.0.0.1:8000/api/users/logout' \
 
 ## Installation
 
-1. Create a virtual environment:
+1. Clone the project from GitHub:
+   ```bash
+   git clone https://github.com/abhishek-rajput119/authentication.git
+
+2. Go to base directory:
+    ```bash
+   cd authentication
+
+3. Create a virtual environment:
    ```bash
    python -m venv venv_name
    ```
 
-2. Activate the virtual environment:
+4. Activate the virtual environment:
    - On Windows:
      ```bash
      venv_name\Scripts\activate
@@ -119,18 +127,18 @@ curl --location --request POST 'http://127.0.0.1:8000/api/users/logout' \
      source venv_name/bin/activate
      ```
 
-3. Install requirements:
+5. Install requirements:
    ```bash
    pip install -r requirements.txt
    ```
 
-4. Migrate the database:
+6. Migrate the database:
    ```bash
    python manage.py makemigrations
    python manage.py migrate
    ```
 
-5. Run the development server:
+7. Run the development server:
    ```bash
    python manage.py runserver
    ```
