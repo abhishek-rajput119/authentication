@@ -1,6 +1,6 @@
 from rest_framework import exceptions, status
 from rest_framework.permissions import BasePermission
-
+from user_auth.models import BlockedToken
 from user_auth.utils.jwt_util import Auth
 
 
@@ -13,4 +13,6 @@ class IsAuthenticated(BasePermission):
 
         request.user = payload
 
-        return True
+        blocked = BlockedToken.objects.filter(username=payload.get("username"), token=access_token).exists()
+
+        return not blocked
