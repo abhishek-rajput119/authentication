@@ -1,3 +1,4 @@
+from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from .serializers.user_serializer import UserSerializer
@@ -41,7 +42,8 @@ class UserLoginView(APIView):
 
         return Response({"message": message}, status=status.HTTP_404_NOT_FOUND)
 
-class UserView(APIView):
+
+class UserDetailView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
@@ -53,6 +55,8 @@ class UserView(APIView):
         response = UserSerializer(user_instance).data
         return Response(response, status=status.HTTP_200_OK)
 
+class UserUpdateView(APIView):
+    permission_classes = [IsAuthenticated]
     def put(self, request):
         username = request.user.get("username")
         user_instance, error = UserController().get_user_by_username(username)
@@ -67,6 +71,9 @@ class UserView(APIView):
             "details": UserSerializer(updated_user).data
         }
         return Response(response, status=status.HTTP_200_OK)
+
+class UserDeleteView(APIView):
+    permission_classes = [IsAuthenticated]
     def delete(self, request):
         username = request.user.get("username")
         password = request.data.get("password")
@@ -80,3 +87,15 @@ class UserView(APIView):
         if not user:
             return Response(response, status=status.HTTP_400_BAD_REQUEST)
         return Response(response, status=status.HTTP_204_NO_CONTENT)
+
+class UserLogoutView(APIView):
+    permission_classes = [IsAuthenticated]
+    def post(self, request):
+        username = request.user.get('username')
+        access_token = request.headers.get('Authorization')
+        result = UserController().logout_user(username, access_token)
+
+        if result:
+            return Response({"message": "Successfully logged out."}, status=status.HTTP_200_OK)
+
+        return Response({"message": "Can't complete request"}, status=status.HTTP_400_BAD_REQUEST)

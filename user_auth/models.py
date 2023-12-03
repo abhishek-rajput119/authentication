@@ -18,3 +18,14 @@ class UserDetails(models.Model):
 
     class Meta:
         db_table = "user_details"
+
+
+class BlockedToken(models.Model):
+    username = models.CharField(max_length=15)
+    token = models.TextField()
+
+    def __str__(self):
+        return self.username
+
+    class Meta:
+        db_table = "blocked_tokens"

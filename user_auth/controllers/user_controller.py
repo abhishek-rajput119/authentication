@@ -1,4 +1,4 @@
-from user_auth.models import UserDetails
+from user_auth.models import UserDetails, BlockedToken
 from user_auth.constants.constants import Constants
 from user_auth.utils.jwt_util import Auth
 from user_auth.utils.hashing import PasswordHasher
@@ -107,3 +107,12 @@ class UserController:
 
         user.delete()
         return user, Constants.UserConstants.DELETE_SUCCESS
+
+    def logout_user(self, username, token):
+        if not username or not token:
+            return None
+        try:
+            blocked = BlockedToken.objects.create(username = username,token=token)
+            return blocked
+        except Exception as e:
+            return None
