@@ -25,6 +25,15 @@ class UserController:
         user_details = self.get_user_details(user_data)
         return user_details, None
 
+    def confirm_password(self, user: UserDetails, password):
+        password_salt = bytes(user.salt, 'utf-8')
+
+        hashed_password = PasswordHasher().hash_password(password, password_salt)
+        hashed_password = hashed_password.decode('utf-8')
+        user = UserDetails.objects.filter(username=user.username, password=hashed_password).first()
+
+        return user
+
     def login_user(self, username, password):
         if not username:
             return None, {"message": "username is required"}
@@ -35,11 +44,8 @@ class UserController:
             user = UserDetails.objects.filter(username=username).first()
             if not user:
                 return None, Constants.UserConstants.DOES_NOT_EXISTS
-            password_salt = bytes(user.salt, 'utf-8')
 
-            hashed_password = PasswordHasher().hash_password(password, password_salt)
-            hashed_password = hashed_password.decode('utf-8')
-            user = UserDetails.objects.filter(username=username, password=hashed_password).first()
+            user = self.confirm_password(user, password)
             if not user:
                 return None, Constants.UserConstants.INCORRECT_CREDENTIALS
 
@@ -69,13 +75,35 @@ class UserController:
 
         return user_details
 
-    def get_user_details_by_username(self, username):
+    def get_user_by_username(self, username):
         if not username:
             return None, "Please provide username"
         try:
             user = UserDetails.objects.get(username=username)
             return user, None
         except UserDetails.DoesNotExist as exc:
-            return None, f'{exc}'
+            return None, Constants.UserConstants.DOES_NOT_EXISTS
         except Exception as e:
             return None, f'{e}'
+
+    def update_user_details(self, user: UserDetails, request_data):
+        try:
+            user.name = request_data.get("name")
+            user.bio = request_data.get("bio")
+            user.age = request_data.get("age")
+            user.username = request_data.get("username")
+            user.save()
+        except Exception as e:
+            return None, f"{e}"
+        return user, None
+
+    def delete_user_using_password_confirmation(self, user, password):
+        if not password:
+            return None, Constants.UserConstants.PASSWORD_REQUIRED
+
+        user = self.confirm_password(user, password)
+        if not user:
+            return None, Constants.UserConstants.INCORRECT_PASSWORD
+
+        user.delete()
+        return user, Constants.UserConstants.DELETE_SUCCESS

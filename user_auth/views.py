@@ -41,15 +41,42 @@ class UserLoginView(APIView):
 
         return Response({"message": message}, status=status.HTTP_404_NOT_FOUND)
 
-
 class UserView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
         username = request.user.get("username")
 
-        user_instance, error = UserController().get_user_details_by_username(username)
+        user_instance, error = UserController().get_user_by_username(username)
         if error:
             return Response({"message": error}, status=status.HTTP_404_NOT_FOUND)
         response = UserSerializer(user_instance).data
         return Response(response, status=status.HTTP_200_OK)
+
+    def put(self, request):
+        username = request.user.get("username")
+        user_instance, error = UserController().get_user_by_username(username)
+        if error:
+            return Response({"message": error}, status=status.HTTP_404_NOT_FOUND)
+        updated_user, error = UserController().update_user_details(user_instance, request.data)
+
+        if error:
+            return Response({"message": error}, status=status.HTTP_400_BAD_REQUEST)
+        response = {
+            "message": "Successfully Updated.",
+            "details": UserSerializer(updated_user).data
+        }
+        return Response(response, status=status.HTTP_200_OK)
+    def delete(self, request):
+        username = request.user.get("username")
+        password = request.data.get("password")
+        user_instance, error = UserController().get_user_by_username(username)
+        if error:
+            return Response({"message": error}, status=status.HTTP_404_NOT_FOUND)
+
+        user, message = UserController().delete_user_using_password_confirmation(user_instance, password)
+        response = {"message": message}
+
+        if not user:
+            return Response(response, status=status.HTTP_400_BAD_REQUEST)
+        return Response(response, status=status.HTTP_204_NO_CONTENT)
