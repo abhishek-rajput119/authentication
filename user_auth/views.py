@@ -1,13 +1,14 @@
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from .serializers.user_serializer import RegistrationSerializer
+from .serializers.user_serializer import UserSerializer
 from rest_framework import status
 from .controllers.user_controller import UserController
+from .permissions import IsAuthenticated
 
 
 class UserRegistrationView(APIView):
     def post(self, request):
-        serialized_data = RegistrationSerializer(data=request.data)
+        serialized_data = UserSerializer(data=request.data)
         if serialized_data.is_valid():
             user_details, error = UserController().register_user(serialized_data.validated_data)
 
@@ -39,3 +40,16 @@ class UserLoginView(APIView):
             return Response(response, status=status.HTTP_200_OK)
 
         return Response({"message": message}, status=status.HTTP_404_NOT_FOUND)
+
+
+class UserView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        username = request.user.get("username")
+
+        user_instance, error = UserController().get_user_details_by_username(username)
+        if error:
+            return Response({"message": error}, status=status.HTTP_404_NOT_FOUND)
+        response = UserSerializer(user_instance).data
+        return Response(response, status=status.HTTP_200_OK)
