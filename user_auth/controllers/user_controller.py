@@ -68,3 +68,14 @@ class UserController:
         user_details["age"] = user_data.get("age")
 
         return user_details
+
+    def get_user_details_by_username(self, username):
+        if not username:
+            return None, "Please provide username"
+        try:
+            user = UserDetails.objects.get(username=username)
+            return user, None
+        except UserDetails.DoesNotExist as exc:
+            return None, f'{exc}'
+        except Exception as e:
+            return None, f'{e}'
